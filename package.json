@@ -1,0 +1,33 @@
+{
+  "name": "cppfiddle-worker",
+  "version": "0.0.0",
+  "description": "Code compilation and execution worker.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NatalieWolfe/cppfiddle-worker.git"
+  },
+  "author": "Natalie Wolfe <natalie@lifewanted.com>",
+  "license": "MIT",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/NatalieWolfe/cppfiddle-worker/issues"
+  },
+  "homepage": "https://github.com/NatalieWolfe/cppfiddle-worker#readme",
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "body-parser": "^1.15.2",
+    "bunyan": "^1.8.1",
+    "generic-promise-pool": "^1.2.1",
+    "newrelic": "^1.30.3",
+    "restify": "^4.1.1",
+    "restify-errors": "^4.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.5.0",
+    "tap": "^7.1.2"
+  }
+}
