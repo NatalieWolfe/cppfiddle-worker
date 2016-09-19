@@ -12,12 +12,15 @@ var restify = require('restify');
 var executor = require('./lib/executor');
 var logger = require('./lib/logger').child({component: 'server'});
 
+const PORT = process.env.PORT || 8181;
+
 
 var server = restify.createServer({name: 'cppfiddle-worker', log: logger});
 
+server.use(restify.CORS());
 server.use(bodyParser.urlencoded({extended: true}));
 
-server.post('/execute', (req, res, next) => {
+server.post('/execute', function execute(req, res, next) {
     if (!req.body.code) {
         return next(new errors.BadRequestError('`code` is a required parameter.'));
     }
@@ -25,34 +28,38 @@ server.post('/execute', (req, res, next) => {
 
     var results = {};
     fs.writeFileAsync('test.cpp', req.body.code)
+        .finally(() => logger.trace('File written.'))
         .then(() => executor.acquire((ex) => {
+            logger.trace('Executor acquired.');
             return ex.execute('g++ test.cpp')
                 .then((compileResults) => {
                     results.compile = compileResults;
+                    return true;
                 }, (compileResults) => {
                     results.compile = compileResults;
-                    throw new Error('failed to compile');
+                    return false;
                 })
-                .then(() => ex.execute('./a.out'))
-                .then((runResults) => {
-                    results.run = runResults;
-                }, (runResults) => {
-                    results.run = runResults;
-                    throw new Error('failed to run');
+                .then((cont) => {
+                    if (!cont) {
+                        return;
+                    }
+
+                    return ex.execute('./a.out')
+                        .then(
+                            (runResults) => results.run = runResults,
+                            (runResults) => results.run = runResults
+                        )
+                    ;
                 })
+            ;
         }))
         .then(
             () => {
+                logger.debug(results, 'Done executing code.')
                 res.send(results);
                 next();
             },
             (err) => {
-                var msg = err.message;
-                if (msg === 'failed to compile' || msg === 'failed to run') {
-                    res.send(results);
-                    return next();
-                }
-
                 logger.debug({error: err}, 'Failed to execute code.');
                 next(new errors.InternalServerError('Failed to process code.'));
             }
@@ -60,7 +67,7 @@ server.post('/execute', (req, res, next) => {
 });
 
 server.on('after', (req, res) => {
-    logger.debug({path: req.path, status: res.statusCode}, 'Served request.')
+    logger.debug({status: res.statusCode, url: req.url}, 'Served request.')
 });
 
 server.on('close', () => {
