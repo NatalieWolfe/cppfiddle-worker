@@ -27,43 +27,32 @@ server.post('/execute', function execute(req, res, next) {
     logger.trace({code: req.body.code}, 'Executing code.');
 
     var results = {};
-    fs.writeFileAsync('test.cpp', req.body.code)
-        .finally(() => logger.trace('File written.'))
-        .then(() => executor.acquire((ex) => {
-            logger.trace('Executor acquired.');
-            return ex.execute('g++ test.cpp')
-                .then((compileResults) => {
-                    results.compile = compileResults;
-                    return true;
-                }, (compileResults) => {
-                    results.compile = compileResults;
-                    return false;
-                })
-                .then((cont) => {
-                    if (!cont) {
-                        return;
-                    }
-
-                    return ex.execute('./a.out')
-                        .then(
-                            (runResults) => results.run = runResults,
-                            (runResults) => results.run = runResults
-                        )
-                    ;
-                })
-            ;
-        }))
-        .then(
-            () => {
-                logger.debug(results, 'Done executing code.')
-                res.send(results);
-                next();
-            },
-            (err) => {
-                logger.debug({error: err}, 'Failed to execute code.');
-                next(new errors.InternalServerError('Failed to process code.'));
+    executor.acquire((ex) => {
+        logger.trace('Executor acquired.');
+        return ex.compile(req.body.code)).then((compileResults) => {
+            results.compile = compileResults;
+            return true;
+        }, (compileResults) => {
+            results.compile = compileResults;
+            return false;
+        }).then((cont) => {
+            if (!cont) {
+                return;
             }
-        );
+
+            return ex.execute().then(
+                (runResults) => results.run = runResults,
+                (runResults) => results.run = runResults
+            );
+        });
+    })).then(() => {
+        logger.debug(results, 'Done executing code.')
+        res.send(results);
+        next();
+    }, (err) => {
+        logger.debug({error: err}, 'Failed to execute code.');
+        next(new errors.InternalServerError('Failed to process code.'));
+    });
 });
 
 server.on('after', (req, res) => {
