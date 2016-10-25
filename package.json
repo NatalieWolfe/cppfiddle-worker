@@ -4,6 +4,9 @@
   "description": "Code compilation and execution worker.",
   "main": "index.js",
   "scripts": {
+    "build": "docker build . -t cppworker",
+    "start-container": "docker run -p 8181:8080 --name=cppworker cppworker",
+    "restart": "docker restart cppworker",
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -22,11 +25,11 @@
     "bluebird": "^3.4.6",
     "body-parser": "^1.15.2",
     "bunyan": "^1.8.1",
-    "generic-promise-pool": "^1.2.1",
+    "fs-extra": "^0.30.0",
+    "generic-promise-pool": "^1.2.2",
     "newrelic": "^1.30.3",
     "restify": "^4.1.1",
-    "restify-errors": "^4.3.0",
-    "tmp": "0.0.29"
+    "restify-errors": "^4.3.0"
   },
   "devDependencies": {
     "eslint": "^3.5.0",

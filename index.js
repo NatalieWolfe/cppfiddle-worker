@@ -2,11 +2,8 @@
 
 // var newrelic = require('newrelic');
 
-var Promise = require('bluebird');
-
 var bodyParser = require('body-parser');
 var errors = require('restify-errors');
-var fs = Promise.promisifyAll(require('fs'));
 var restify = require('restify');
 
 var executor = require('./lib/executor');
@@ -26,42 +23,42 @@ server.post('/execute', function execute(req, res, next) {
     }
     logger.trace({code: req.body.code}, 'Executing code.');
 
-    var results = {};
+    var results = {
+        compilation: '',
+        execution: ''
+    };
     executor.acquire((ex) => {
         logger.trace('Executor acquired.');
-        return ex.compile(req.body.code)).then((compileResults) => {
-            results.compile = compileResults;
-            return true;
-        }, (compileResults) => {
-            results.compile = compileResults;
-            return false;
-        }).then((cont) => {
-            if (!cont) {
-                return;
-            }
-
-            return ex.execute().then(
-                (runResults) => results.run = runResults,
-                (runResults) => results.run = runResults
-            );
+        var state = 'compilation';
+        ex.on('output', (data) => results[state] += data.toString('utf8'));
+        return ex.compile(req.body.code).then(() => {
+            state = 'execution';
+            return ex.execute();
         });
-    })).then(() => {
-        logger.debug(results, 'Done executing code.')
-        res.send(results);
+    }).then(() => {
+        logger.debug(results, 'Done executing code.');
+        res.send({status: 'success', results});
         next();
-    }, (err) => {
-        logger.debug({error: err}, 'Failed to execute code.');
-        next(new errors.InternalServerError('Failed to process code.'));
+    }, (reason) => {
+        if (reason instanceof Error) {
+            logger.error({error: reason.stack}, 'Error executing code.');
+            next(new errors.InternalServerError('Failed to process code.'));
+        }
+        else {
+            logger.debug(results, 'Code not executable.');
+            res.send({status: 'failure', reason, results});
+            next();
+        }
     });
 });
 
 server.on('after', (req, res) => {
-    logger.debug({status: res.statusCode, url: req.url}, 'Served request.')
+    logger.debug({status: res.statusCode, url: req.url}, 'Served request.');
 });
 
 server.on('close', () => {
     logger.info('Server shut down.');
-})
+});
 
 server.listen(PORT, () => {
     logger.info({port: PORT}, 'Server is listening.');
