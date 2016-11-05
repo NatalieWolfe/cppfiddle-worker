@@ -3,13 +3,14 @@
 // var newrelic = require('newrelic');
 
 var bodyParser = require('body-parser');
+var config = require('config');
 var errors = require('restify-errors');
 var restify = require('restify');
 
 var executor = require('./lib/executor');
 var logger = require('./lib/logger').child({component: 'server'});
 
-const PORT = process.env.PORT || 8181;
+const PORT = config.get('server.port');
 
 
 var server = restify.createServer({name: 'cppfiddle-worker', log: logger});

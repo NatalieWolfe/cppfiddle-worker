@@ -1,0 +1,13 @@
+{
+    "server": {
+        "port": "PORT"
+    },
+    "executor": {
+        "uid": "FIDDLE_EXECUTOR_USER_ID",
+        "path": "FIDDLE_EXECUTOR_DIRECTORY",
+        "noCleaning": "FIDDLE_EXECUTOR_NO_CLEANING"
+    },
+    "logging": {
+        "level": "FIDDLE_LOGGING_LEVEL"
+    }
+}
