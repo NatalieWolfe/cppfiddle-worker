@@ -33,6 +33,7 @@ RUN npm install
 # Start the application
 ENV PORT 8080
 EXPOSE ${PORT}
+COPY config ./config
 COPY *.js ./
 COPY lib ./lib
 CMD ["npm", "start"]
