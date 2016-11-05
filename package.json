@@ -23,14 +23,12 @@
   "homepage": "https://github.com/NatalieWolfe/cppfiddle-worker#readme",
   "dependencies": {
     "bluebird": "^3.4.6",
-    "body-parser": "^1.15.2",
     "bunyan": "^1.8.1",
     "config": "^1.24.0",
     "fs-extra": "^1.0.0",
     "generic-promise-pool": "^1.2.2",
     "newrelic": "^1.30.3",
-    "restify": "^4.1.1",
-    "restify-errors": "^4.3.0"
+    "socket.io": "^1.5.1"
   },
   "devDependencies": {
     "eslint": "^3.5.0",
