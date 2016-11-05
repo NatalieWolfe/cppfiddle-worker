@@ -23,6 +23,16 @@ io.on('connect', (socket) => {
     });
 });
 
+server.on('request', (req, res) => {
+    // If this is a health check, respond immediately. Otherwise it is either a
+    // socket connection (which socket.io will handle) or an invalid request
+    // (which we'll let time out).
+    if (req.url === '/ping') {
+        res.write('pong');
+        res.end();
+    }
+});
+
 server.on('close', () => {
     logger.info('Server shut down.');
 });
